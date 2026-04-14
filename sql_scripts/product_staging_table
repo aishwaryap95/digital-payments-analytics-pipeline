@@ -7,3 +7,6 @@ CREATE TABLE product_staging_table (
     status VARCHAR(1),
     error_message VARCHAR(500)
 );
+
+ALTER TABLE product_staging_table
+ADD COLUMN error_type VARCHAR(50);
