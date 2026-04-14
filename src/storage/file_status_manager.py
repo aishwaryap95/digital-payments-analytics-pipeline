@@ -35,7 +35,7 @@ def mark_old_active_as_failed(cursor, connection):
 # ---------------------------------------------------
 
 def mark_file_active(cursor, connection, file_name):
-    logger.info(f"Marking file {file_name} as Active")
+    logger.info("Marking file '%s' as Active", file_name)
 
     statement = f"""
     UPDATE {DB_NAME}.{STAGING_TABLE}
@@ -45,7 +45,13 @@ def mark_file_active(cursor, connection, file_name):
     """
 
     cursor.execute(statement, (file_name,))
+    rows_updated = cursor.rowcount
     connection.commit()
+
+    if rows_updated > 0:
+        logger.info("File '%s' successfully marked as Active", file_name)
+    else:
+        logger.warning("File '%s' not found in staging table. No rows updated.", file_name)
 
 
 # ---------------------------------------------------
@@ -72,7 +78,12 @@ def mark_file_completed(cursor, connection, file_name):
 
 def mark_file_failed(cursor, connection, file_name, error_message, error_type):
 
-    logger.error(f"Marking file {file_name} as Failed")
+    logger.error(
+        "Marking file '%s' as Failed | Error Type: %s | Error Message: %s",
+        file_name,
+        error_type,
+        error_message
+    )
 
     statement = f"""
     UPDATE {DB_NAME}.{STAGING_TABLE}
@@ -84,8 +95,13 @@ def mark_file_failed(cursor, connection, file_name, error_message, error_type):
     """
 
     cursor.execute(statement, (error_type, error_message, file_name))
+    rows_updated = cursor.rowcount
     connection.commit()
 
+    if rows_updated > 0:
+        logger.error("File '%s' successfully marked as Failed",file_name)
+    else:
+        logger.warning("File '%s' not found in staging table. No rows updated.",file_name)
 
 # ---------------------------------------------------
 # 5. Reprocess Failed Files
