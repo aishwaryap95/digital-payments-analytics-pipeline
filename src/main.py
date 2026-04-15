@@ -53,11 +53,22 @@ def main():
 
         # Step 4 - Reprocess Failed Files
         failed_files = reprocess_failed_files(cursor)
-
         logger.info(f"Failed files eligible for reprocess: {failed_files}")
 
+        landing_files = files
+        landing_file_names = set([f.split("/")[-1] for f in landing_files])
+        failed_file_paths = []
+
+        for f in failed_files:
+            file_name = f[0]
+
+            if file_name not in landing_file_names:
+                failed_file_paths.append(
+                    f"s3://{config.bucket_name}/{LANDING}/{file_name}"
+                )
+
         # Merge landing + failed files
-        all_files = files + [f[0] for f in failed_files]
+        all_files = landing_files + failed_file_paths
         logger.info("Files to process: %s", all_files)
 
         for file in all_files:
