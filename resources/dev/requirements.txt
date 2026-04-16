@@ -2,7 +2,7 @@ pycryptodomex
 pycryptodome
 loguru
 boto3
-pyspark
+pyspark==3.5.2
 findspark
 mysql-connector-python==8.0.33
 dotenv

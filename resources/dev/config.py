@@ -35,9 +35,11 @@ DB_NAME = os.getenv("MYSQL_DB")
 STAGING_TABLE = "product_staging_table"
 
 url = f"jdbc:mysql://{DB_HOST}:3306/{DB_NAME}"
-
 properties = {
     "user": DB_USER,
     "password": DB_PASSWORD,
     "driver": "com.mysql.cj.jdbc.Driver"
 }
+
+# Required columns
+mandatory_columns = ["customer_id","store_id","product_name","category","sales_date","sales_person_id","price","quantity","total_cost"]
