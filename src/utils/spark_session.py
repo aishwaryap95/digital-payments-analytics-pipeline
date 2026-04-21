@@ -9,7 +9,7 @@ from src.utils.encrypt_decrypt import *
 def spark_session():
     spark = (SparkSession.builder
              .master("local[*]")
-             .appName("retail_sales_project")
+             .appName("digital_payments_analytics")
 
              .config("spark.jars.packages",
                      "org.apache.hadoop:hadoop-aws:3.3.4" )

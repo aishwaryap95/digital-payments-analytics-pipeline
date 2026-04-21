@@ -32,7 +32,7 @@ DB_USER = os.getenv("MYSQL_USER")
 DB_PASSWORD = os.getenv("MYSQL_PASSWORD")
 DB_NAME = os.getenv("MYSQL_DB")
 
-STAGING_TABLE = "product_staging_table"
+STAGING_TABLE = "file_staging_table"
 
 url = f"jdbc:mysql://{DB_HOST}:3306/{DB_NAME}"
 properties = {
