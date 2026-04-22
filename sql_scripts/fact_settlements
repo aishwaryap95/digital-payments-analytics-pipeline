@@ -1,0 +1,12 @@
+CREATE TABLE fact_settlements (
+    settlement_id VARCHAR(30) PRIMARY KEY,
+    merchant_id INT,
+    transaction_id VARCHAR(30),
+    settlement_date DATE,
+    gross_amount DECIMAL(12,2),
+    fee_amount DECIMAL(12,2),
+    net_amount DECIMAL(12,2),
+    settlement_status VARCHAR(20),
+    FOREIGN KEY (merchant_id) REFERENCES dim_merchant(merchant_id),
+    FOREIGN KEY (transaction_id) REFERENCES fact_transactions(transaction_id)
+);

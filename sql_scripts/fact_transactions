@@ -1,0 +1,17 @@
+CREATE TABLE fact_transactions (
+    transaction_id VARCHAR(30) PRIMARY KEY,
+    customer_id INT,
+    merchant_id INT,
+    channel_id INT,
+    transaction_timestamp DATETIME,
+    transaction_amount DECIMAL(12,2),
+    transaction_status VARCHAR(20),
+    failure_reason VARCHAR(100),
+    device_type VARCHAR(30),
+    bank_name VARCHAR(50),
+    city VARCHAR(100),
+    processing_fee DECIMAL(10,2),
+    FOREIGN KEY (customer_id) REFERENCES dim_customer(customer_id),
+    FOREIGN KEY (merchant_id) REFERENCES dim_merchant(merchant_id),
+    FOREIGN KEY (channel_id) REFERENCES dim_payment_channel(channel_id)
+);
