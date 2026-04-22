@@ -34,17 +34,22 @@ def mark_old_active_as_failed(cursor, connection):
 # 2. Mark File Active
 # ---------------------------------------------------
 
-def mark_file_active(cursor, connection, file_name):
+def upsert_file_active(cursor, connection, file_name, file_location):
     logger.info("Marking file '%s' as Active", file_name)
 
     statement = f"""
-    UPDATE {DB_NAME}.{STAGING_TABLE}
-    SET status = 'A',
-    updated_date = NOW()
-    WHERE file_name = %s
+    INSERT INTO {DB_NAME}.{STAGING_TABLE}
+    (file_name, file_location, created_date, updated_date, status, error_type)
+    VALUES (%s, %s, NOW(), NOW(), 'A', NULL)
+    
+    ON DUPLICATE KEY UPDATE
+    status = 'A',
+    updated_date = NOW(),
+    file_location = VALUES(file_location),
+    error_type = NULL
     """
 
-    cursor.execute(statement, (file_name,))
+    cursor.execute(statement, (file_name,file_location))
     rows_updated = cursor.rowcount
     connection.commit()
 
