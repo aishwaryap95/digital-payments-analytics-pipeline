@@ -24,10 +24,7 @@ def main():
     connection = get_mysql_connection()
     cursor = connection.cursor()
 
-    # Step 1 - Mark old active files
-    mark_old_active_as_failed(cursor, connection)
-
-    # Step 2 - Create S3 Client
+    # Create S3 Client
     logger.info("*************** Creating S3 client ***************")
     s3_client_provider = S3ClientProvider(decrypt(aws_access_key), decrypt(aws_secret_key))
     s3_client = s3_client_provider.get_client()
@@ -38,7 +35,7 @@ def main():
     logger.info("List of Buckets: %s", response['Buckets'])
 
     try:
-        # Step 3 - List Landing Files
+        # List Landing Files
         logger.info("*************** Listing Landing Files ***************")
         s3_reader = S3Reader()
         files = s3_reader.list_files(
@@ -53,62 +50,48 @@ def main():
 
         logger.info(f"Total files found: {len(files)}")
 
-        # Step 4 - Reprocess Failed Files
-        failed_files = reprocess_failed_files(cursor)
-        logger.info(f"Failed files eligible for reprocess: {failed_files}")
+        # FILE Level Validation
+        csv_files, error_files = validate_input_files(files)
 
-        landing_files = files
-        landing_file_names = set([f.split("/")[-1] for f in landing_files])
-        failed_file_paths = []
+        logger.info("Valid CSV file count: %s",len(csv_files))
+        logger.info("Invalid file count: %s",len(error_files))
 
-        for f in failed_files:
-            file_name = f[0]
-
-            if file_name not in landing_file_names:
-                failed_file_paths.append(
-                    f"s3://{config.bucket_name}/{LANDING}/{file_name}"
-                )
-
-        # Merge landing + failed files
-        all_files = landing_files + failed_file_paths
-        logger.info("Files to process: %s", all_files)
-
-        # Filter files with .csv in their name and create absolute paths
-        if all_files:
-            csv_files = []
-            error_files = []
-            for file in all_files:
-                if file.endswith(".csv"):
-                    csv_files.append(file)
-                else:
-                    error_files.append(os.path.abspath(file))
-
-            if not csv_files:
-                logger.error("No CSV data available to process the request.")
-                raise Exception("No csv data available to process the request")
-        else:
-            logger.error("There is no data to process")
-            raise Exception("There is no data to process")
-
-        logger.info("*************** Listing the File ***************")
-        logger.info("List of CSV files that needs to be processed: %s", csv_files)
+        # # Filter files with .csv in their name and create absolute paths
+        # if all_files:
+        #     csv_files = []
+        #     error_files = []
+        #     for file in all_files:
+        #         if file.endswith(".csv"):
+        #             csv_files.append(file)
+        #         else:
+        #             error_files.append(os.path.abspath(file))
+        #
+        #     if not csv_files:
+        #         logger.error("No CSV data available to process the request.")
+        #         raise Exception("No csv data available to process the request")
+        # else:
+        #     logger.error("There is no data to process")
+        #     raise Exception("There is no data to process")
+        #
+        # logger.info("*************** Listing the File ***************")
+        # logger.info("List of CSV files that needs to be processed: %s", csv_files)
 
         logger.info("*************** Creating Spark Session ***************")
         spark = spark_session()
         logger.info("*************** Spark Session created. ***************")
 
-        # schema validation
-        correct_files = validate_csv_schema(
-            spark,
-            csv_files,
-            s3_client,
-            cursor,
-            connection
-        )
+        # # schema validation
+        # correct_files = validate_csv_schema(
+        #     spark,
+        #     csv_files,
+        #     s3_client,
+        #     cursor,
+        #     connection
+        # )
 
         logger.info("Files ready for processing: %s", correct_files)
 
-        logger.info("*************** Moving error data to error directory if any ***************")
+        # logger.info("*************** Moving error data to error directory if any ***************")
 
         # if error_files:
         #     for file_path in error_files:
