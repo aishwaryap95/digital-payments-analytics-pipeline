@@ -9,6 +9,7 @@ from src.storage.move.move_files import *
 from src.utils.spark_session import *
 from src.validation.schema_validator import *
 from src.utils.helper import *
+from src.storage.read.payment_reader import *
 
 LANDING = config.s3_landing_directory
 PROCESSING = config.s3_processing_directory
@@ -86,8 +87,8 @@ def main():
         # else:
         #     logger.info("No error files found. All files are valid.")
 
+        processing_files = []
         for file in csv_files:
-            if __name__ == '__main__':
                 file_name = file.split('/')[-1]
                 logger.info(f"Processing file: {file_name}")
 
@@ -97,23 +98,44 @@ def main():
                     move_s3_file(s3_client, config.bucket_name, file, PROCESSING)
 
                     # Mark file as Active
-                    # Check file exists in staging?
-                    # If not exists -> INSERT row with status = A
-                    # If exists -> UPDATE status = A
-                    processing_path = build_s3_path(config.bucket_name, PROCESSING, file_name)
+                    # Check file exists in staging? If not exists -> INSERT row with status = A, If exists -> UPDATE status = A
+                    processing_path = build_s3a_path(config.bucket_name, PROCESSING, file_name)
                     upsert_file_active(cursor, connection, file_name, processing_path)
 
-                    # Processing
+                    processing_files.append(processing_path)
 
-                    # Success
+                except Exception as e:
+                    logger.error("Failed before spark load %s : %s", file_name, e)
+
+        # Processing
+        logger.info("*************** Loading DataFrames ***************")
+        df_map = load_payment_dfs(spark, processing_files)
+
+        df_customer = df_map.get("customer")
+        df_merchant = df_map.get("merchant")
+        df_channel = df_map.get("channel")
+        df_transactions = df_map.get("transactions")
+        df_refunds = df_map.get("refunds")
+        df_settlements = df_map.get("settlements")
+
+        logger.info("Customer Count: %s", df_customer.count())
+        logger.info("Merchant Count: %s", df_merchant.count())
+        logger.info("Transaction Count: %s", df_transactions.count())
+
+        df_customer.show()
+        df_merchant.show()
+        df_channel.show()
+        df_refunds.show()
+        df_settlements.show()
+        df_transactions.show(5, False)
+        logger.info("*************** DataFrames Loaded Successfully ***************")
+
+        # Success
                     # mark_file_completed(cursor, connection, file_name)
 
                     # Move to processed
                     # logger.info(f"Moving file to processed {file_name}")
                     # move_s3_file(s3_client,config.bucket_name,f"{PROCESSING}/{file_name}",PROCESSED)
-
-                except Exception as e:
-                    logger.error(f"File processing failed {file_name} : {e}")
 
                 # # Mark Failed
                 # mark_file_failed(cursor,connection,file_name,str(e),"SYSTEM_FAILURE")

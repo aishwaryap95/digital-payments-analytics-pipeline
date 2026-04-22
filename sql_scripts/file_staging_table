@@ -8,3 +8,6 @@ CREATE TABLE file_staging_table (
     error_type VARCHAR(50),
     error_message VARCHAR(500)
 );
+
+ALTER TABLE file_staging_table
+ADD UNIQUE(file_name);
