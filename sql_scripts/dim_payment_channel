@@ -1,0 +1,5 @@
+CREATE TABLE dim_payment_channel (
+    channel_id INT PRIMARY KEY,
+    channel_type VARCHAR(50),
+    provider_name VARCHAR(100)
+);

@@ -1,0 +1,10 @@
+CREATE TABLE dim_merchant (
+    merchant_id INT PRIMARY KEY,
+    merchant_name VARCHAR(100),
+    merchant_category VARCHAR(50),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    onboard_date DATE,
+    risk_tier VARCHAR(20),
+    settlement_cycle VARCHAR(20)
+);

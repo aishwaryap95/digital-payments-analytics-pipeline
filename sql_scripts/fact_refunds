@@ -1,0 +1,11 @@
+CREATE TABLE fact_refunds (
+    refund_id VARCHAR(30) PRIMARY KEY,
+    transaction_id VARCHAR(30),
+    customer_id INT,
+    refund_timestamp DATETIME,
+    refund_amount DECIMAL(12,2),
+    refund_reason VARCHAR(100),
+    refund_status VARCHAR(20),
+    FOREIGN KEY (transaction_id) REFERENCES fact_transactions(transaction_id),
+    FOREIGN KEY (customer_id) REFERENCES dim_customer(customer_id)
+);

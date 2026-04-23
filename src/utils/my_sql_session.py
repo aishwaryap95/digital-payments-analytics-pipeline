@@ -11,7 +11,6 @@ def get_mysql_connection():
             password=DB_PASSWORD,
             database=DB_NAME
         )
-        logger.info("log")
         if connection.is_connected():
             logger.info("Connected to MySQL database")
 

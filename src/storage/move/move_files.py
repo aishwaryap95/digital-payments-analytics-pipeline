@@ -1,7 +1,7 @@
 from src.utils.logging_config import logger
 import traceback
 
-
+#boto3 uses AWS SDK directly, so: s3://
 def move_s3_file(s3_client, bucket_name, source_path, destination_prefix):
     try:
         logger.info("Source path received: %s", source_path)

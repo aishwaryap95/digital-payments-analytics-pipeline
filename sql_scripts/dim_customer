@@ -1,0 +1,11 @@
+CREATE TABLE dim_customer (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(100),
+    age_group VARCHAR(20),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    signup_date DATE,
+    kyc_status VARCHAR(20),
+    preferred_channel_id INT,
+    FOREIGN KEY (preferred_channel_id) REFERENCES dim_payment_channel(channel_id)
+);
