@@ -1,12 +1,10 @@
-CREATE TABLE product_staging_table (
+CREATE TABLE file_staging_table (
     id INT AUTO_INCREMENT PRIMARY KEY,
     file_name VARCHAR(255),
     file_location VARCHAR(255),
     created_date TIMESTAMP ,
     updated_date TIMESTAMP ,
     status VARCHAR(1),
+    error_type VARCHAR(50),
     error_message VARCHAR(500)
 );
-
-ALTER TABLE product_staging_table
-ADD COLUMN error_type VARCHAR(50);

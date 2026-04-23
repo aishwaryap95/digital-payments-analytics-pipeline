@@ -6,6 +6,8 @@ from src.utils.my_sql_session import *
 from src.storage.file_status_manager import *
 from src.storage.read.s3_read import *
 from src.storage.move.move_files import *
+from src.utils.spark_session import *
+from src.validation.schema_validator import *
 
 LANDING = config.s3_landing_directory
 PROCESSING = config.s3_processing_directory
@@ -22,10 +24,7 @@ def main():
     connection = get_mysql_connection()
     cursor = connection.cursor()
 
-    # Step 1 - Mark old active files
-    mark_old_active_as_failed(cursor, connection)
-
-    # Step 2 - Create S3 Client
+    # Create S3 Client
     logger.info("*************** Creating S3 client ***************")
     s3_client_provider = S3ClientProvider(decrypt(aws_access_key), decrypt(aws_secret_key))
     s3_client = s3_client_provider.get_client()
@@ -36,7 +35,7 @@ def main():
     logger.info("List of Buckets: %s", response['Buckets'])
 
     try:
-        # Step 3 - List Landing Files
+        # List Landing Files
         logger.info("*************** Listing Landing Files ***************")
         s3_reader = S3Reader()
         files = s3_reader.list_files(
@@ -51,60 +50,143 @@ def main():
 
         logger.info(f"Total files found: {len(files)}")
 
-        # Step 4 - Reprocess Failed Files
-        failed_files = reprocess_failed_files(cursor)
+        # FILE Level Validation
+        csv_files, error_files = validate_input_files(files)
 
-        logger.info(f"Failed files eligible for reprocess: {failed_files}")
+        logger.info("Valid CSV file count: %s",len(csv_files))
+        logger.info("Invalid file count: %s",len(error_files))
 
-        # Merge landing + failed files
-        all_files = files + [f[0] for f in failed_files]
-        logger.info("Files to process: %s", all_files)
+        # # Filter files with .csv in their name and create absolute paths
+        # if all_files:
+        #     csv_files = []
+        #     error_files = []
+        #     for file in all_files:
+        #         if file.endswith(".csv"):
+        #             csv_files.append(file)
+        #         else:
+        #             error_files.append(os.path.abspath(file))
+        #
+        #     if not csv_files:
+        #         logger.error("No CSV data available to process the request.")
+        #         raise Exception("No csv data available to process the request")
+        # else:
+        #     logger.error("There is no data to process")
+        #     raise Exception("There is no data to process")
+        #
+        # logger.info("*************** Listing the File ***************")
+        # logger.info("List of CSV files that needs to be processed: %s", csv_files)
 
-        for file in all_files:
-            file_name = file.split("/")[-1]
+        logger.info("*************** Creating Spark Session ***************")
+        spark = spark_session()
+        logger.info("*************** Spark Session created. ***************")
 
-            logger.info(f"Processing file: {file_name}")
-            try:
-                # Move to processing
-                logger.info(f"Moving file to processing: {file_name}")
+        # # schema validation
+        # correct_files = validate_csv_schema(
+        #     spark,
+        #     csv_files,
+        #     s3_client,
+        #     cursor,
+        #     connection
+        # )
 
-                move_s3_file(
-                    s3_client,
-                    config.bucket_name,
-                    file,
-                    PROCESSING
-                )
+        logger.info("Files ready for processing: %s", correct_files)
 
-                # Mark Active
-                mark_file_active(cursor, connection, file_name)
+        # logger.info("*************** Moving error data to error directory if any ***************")
 
-                # Processing
-                logger.info(f"Validating file {file_name}")
-
-                # validation logic
-                logger.info(f"Transforming file {file_name}")
-
-                # transformation logic
-                logger.info(f"Loading file {file_name}")
-
-                # load logic
-
-                # # Success
-                # mark_file_completed(cursor, connection, file_name)
-                #
-                # # Step 8 - Move to processed
-                # logger.info(f"Moving file to processed {file_name}")
-                #
-                # move_s3_file(
-                #     s3_client,
-                #     config.bucket_name,
-                #     f"{PROCESSING}/{file_name}",
-                #     PROCESSED
-                # )
-
-            except Exception as e:
-
-                logger.error(f"File processing failed {file_name} : {e}")
+        # if error_files:
+        #     for file_path in error_files:
+        #         file_name = file_path.rstrip('/').split('/')[-1]
+        #         logger.info("Extracted file name: %s", file_name)
+        #
+        #         if not file_name.lower().endswith(".csv"):
+        #             error_files.append((file_path, None, "FORMAT_FAILURE"))
+        #
+        #         elif missing_columns:
+        #             error_files.append((file_path, missing_columns, "SCHEMA_FAILURE"))
+        #
+        #         else:
+        #             error_type = None
+        #
+        #         logger.info(
+        #             "Moving file %s to failed folder due to %s",
+        #             file_name,
+        #             error_type
+        #         )
+        #
+        #         try:
+        #             # Move file in S3
+        #             move_s3_file(
+        #                 s3_client,
+        #                 config.bucket_name,
+        #                 file_path,
+        #                 FAILED
+        #             )
+        #
+        #             # Update DB
+        #             mark_file_failed(
+        #                 cursor,
+        #                 connection,
+        #                 file_name,
+        #                 error_message,
+        #                 error_type
+        #             )
+        #
+        #         except Exception as e:
+        #             logger.error(
+        #                 "Failed to move/update file %s: %s",
+        #                 file_name,
+        #                 str(e)
+        #             )
+        # else:
+        #     logger.info("No error files found. All files are valid.")
+        #
+        # for file in csv_files:
+        #     file_name = file.split("/")[-1]
+        #
+        #     logger.info(f"Processing file: {file_name}")
+        #     try:
+        #         # Move to processing
+        #         logger.info(f"Moving file to processing: {file_name}")
+        #
+        #         move_s3_file(
+        #             s3_client,
+        #             config.bucket_name,
+        #             file,
+        #             PROCESSING
+        #         )
+        #
+        #         # Mark Active
+        #         mark_file_active(cursor, connection, file_name)
+        #
+        #         #
+        #
+        #         # Processing
+        #         logger.info(f"Validating file {file_name}")
+        #
+        #         # validation logic
+        #         logger.info(f"Transforming file {file_name}")
+        #
+        #         # transformation logic
+        #         logger.info(f"Loading file {file_name}")
+        #
+        #         # load logic
+        #
+        #         # # Success
+        #         # mark_file_completed(cursor, connection, file_name)
+        #         #
+        #         # # Step 8 - Move to processed
+        #         # logger.info(f"Moving file to processed {file_name}")
+        #         #
+        #         # move_s3_file(
+        #         #     s3_client,
+        #         #     config.bucket_name,
+        #         #     f"{PROCESSING}/{file_name}",
+        #         #     PROCESSED
+        #         # )
+        #
+        #     except Exception as e:
+        #
+        #         logger.error(f"File processing failed {file_name} : {e}")
 
                 # # Mark Failed
                 # mark_file_failed(
