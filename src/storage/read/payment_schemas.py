@@ -23,13 +23,13 @@ merchant_schema = StructType([
 ])
 
 channel_schema = StructType([
-    StructField("channel_id", IntegerType(), True),
+    StructField("channel_id", IntegerType(), False),
     StructField("channel_type", StringType(), True),
     StructField("provider_name", StringType(), True)
 ])
 
 transaction_schema = StructType([
-    StructField("transaction_id", StringType(), True),
+    StructField("transaction_id", StringType(), False),
     StructField("customer_id", IntegerType(), True),
     StructField("merchant_id", IntegerType(), True),
     StructField("channel_id", IntegerType(), True),
@@ -44,7 +44,7 @@ transaction_schema = StructType([
 ])
 
 refund_schema = StructType([
-    StructField("refund_id", StringType(), True),
+    StructField("refund_id", StringType(), False),
     StructField("transaction_id", StringType(), True),
     StructField("customer_id", IntegerType(), True),
     StructField("refund_timestamp", TimestampType(), True),
@@ -54,7 +54,7 @@ refund_schema = StructType([
 ])
 
 settlement_schema = StructType([
-    StructField("settlement_id", StringType(), True),
+    StructField("settlement_id", StringType(), False),
     StructField("merchant_id", IntegerType(), True),
     StructField("transaction_id", StringType(), True),
     StructField("settlement_date", DateType(), True),

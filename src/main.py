@@ -10,6 +10,7 @@ from src.utils.spark_session import *
 from src.validation.schema_validator import *
 from src.utils.helper import *
 from src.storage.read.payment_reader import *
+from src.storage.write.data_writer import *
 
 LANDING = config.s3_landing_directory
 PROCESSING = config.s3_processing_directory
@@ -129,6 +130,20 @@ def main():
         df_settlements.show()
         df_transactions.show(5, False)
         logger.info("*************** DataFrames Loaded Successfully ***************")
+
+        logger.info("*************** Writing data to Data Mart ***************")
+
+        transaction_performance_mart_df = df_transactions.alias("t").join(df_merchant.alias("m"), df_transactions["merchant_id"] == df_merchant["merchant_id"]) \
+                                        .join(df_channel.alias("c"), df_channel["channel_id"] == df_transactions["channel_id"]) \
+                                        .select(col("t.transaction_id"), col("t.customer_id"), col("t.merchant_id"), col("t.channel_id"),
+                                            col("t.transaction_timestamp"), col("t.transaction_amount"), col("t.transaction_status"), col("t.city"),
+                                            col("t.processing_fee"), col("c.channel_type"), col("c.provider_name"), col("m.merchant_name"),
+                                            col("m.merchant_category"), col("m.state"), col("m.risk_tier"), col("m.settlement_cycle"))
+        transaction_performance_mart_df.show()
+
+        s3_transaction_performance_mart_path = f"s3a://{bucket_name}/{config.s3_transaction_performance_mart}/"
+        data_writer = DataWriter("overwrite","parquet")
+        data_writer.dataframe_writer(transaction_performance_mart_df, s3_transaction_performance_mart_path)
 
         # Success
                     # mark_file_completed(cursor, connection, file_name)

@@ -20,8 +20,10 @@ s3_failed_directory = "failed/"
 
 # Data mart folders
 s3_data_mart_directory = "data_mart/"
-s3_customer_datamart_directory = "data_mart/customer_data_mart/"
-s3_sales_datamart_directory = "data_mart/sales_team_data_mart/"
+s3_transaction_performance_mart = "data_marts/transaction_performance_mart/"
+s3_merchant_settlement_mart = "data_marts/merchant_settlement_mart/"
+s3_refund_insights_mart = "data_marts/refund_insights_mart/"
+s3_customer_behaviour_mart = "data_marts/customer_behaviour_mart/"
 
 # Partitioned data mart
 s3_partitioned_datamart_directory = "partitioned_data_mart/"
