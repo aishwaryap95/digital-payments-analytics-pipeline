@@ -119,52 +119,58 @@ def main():
         df_refunds = df_map.get("refunds")
         df_settlements = df_map.get("settlements")
 
-        logger.info("Customer Count: %s", df_customer.count())
-        logger.info("Merchant Count: %s", df_merchant.count())
-        logger.info("Transaction Count: %s", df_transactions.count())
+        logger.info("*************** Source DataFrames loaded successfully ***************")
 
-        df_customer.show()
-        df_merchant.show()
-        df_channel.show()
-        df_refunds.show()
-        df_settlements.show()
-        df_transactions.show(5, False)
-        logger.info("*************** DataFrames Loaded Successfully ***************")
+        logger.info("Customer records count      : %s", df_customer.count())
+        logger.info("Merchant records count      : %s", df_merchant.count())
+        logger.info("Channel records count       : %s", df_channel.count())
+        logger.info("Transaction records count   : %s", df_transactions.count())
+        logger.info("Refund records count        : %s", df_refunds.count())
+        logger.info("Settlement records count    : %s", df_settlements.count())
 
-        logger.info("*************** Writing data to Data Mart ***************")
+        logger.info("=============== Building Transaction Performance Mart ===============")
 
         transaction_performance_mart_df = (
             df_transactions.alias("t") \
             .join(
                 df_merchant.alias("m"),
-                df_transactions["merchant_id"] == df_merchant["merchant_id"]
+                df_transactions["merchant_id"] == df_merchant["merchant_id"],
+                "left"
             ) \
             .join(
                 df_channel.alias("c"),
-                df_channel["channel_id"] == df_transactions["channel_id"]
+                df_transactions["channel_id"] == df_channel["channel_id"],
+                "left"
             ).select(
                 col("t.transaction_id"), col("t.customer_id"), col("t.merchant_id"), col("t.channel_id"),
                 col("t.transaction_timestamp"), col("t.transaction_amount"), col("t.transaction_status"), col("t.city"),
                 col("t.processing_fee"), col("c.channel_type"), col("c.provider_name"), col("m.merchant_name"),
-                col("m.merchant_category"), col("m.state"), col("m.risk_tier"), col("m.settlement_cycle")))
+                col("m.merchant_category"), col("m.state"), col("m.risk_tier"), col("m.settlement_cycle")
+            )
+        )
+
+        logger.info("Transaction Performance Mart created successfully")
         transaction_performance_mart_df.show()
 
-        # s3_transaction_performance_mart_path = f"s3a://{bucket_name}/{config.s3_transaction_performance_mart}/"
-        # data_writer = DataWriter("overwrite","parquet")
-        # data_writer.dataframe_writer(transaction_performance_mart_df, s3_transaction_performance_mart_path)
+        s3_transaction_performance_mart_path = f"s3a://{bucket_name}/{config.s3_transaction_performance_mart}/"
+        logger.info("Writing Transaction Performance Mart to : %s", s3_transaction_performance_mart_path)
+        data_writer = DataWriter("overwrite","parquet")
+        data_writer.dataframe_writer(transaction_performance_mart_df, s3_transaction_performance_mart_path)
+        logger.info("Transaction Performance Mart written successfully")
 
+        logger.info("=============== Building Merchant Settlement Mart ===============")
         # merchant.join(transactions_df) on merchant_id = creates explosion risk. Bcoz 1 transaction not eql to 1 settlement.
         merchant_settlement_mart_df = (
             df_settlements.alias("s") \
                 .join(
                 df_transactions.alias("t"),
                 col("s.transaction_id") == col("t.transaction_id"),
-                "LEFT"
+                "left"
             ) \
                 .join(
                 df_merchant.alias("m"),
                 col("s.merchant_id") == col("m.merchant_id"),
-                "LEFT"
+                "left"
             ).select(
                 col("m.merchant_id"), col("m.merchant_name"), col("m.merchant_category"), col("m.city"), col("m.state"),
                 col("m.onboard_date"), col("m.risk_tier"), col("m.settlement_cycle"), col("s.settlement_id"),
@@ -172,14 +178,56 @@ def main():
                 year(col("s.settlement_date")).alias("settlement_year"),
                 month(col("s.settlement_date")).alias("settlement_month"),
                 col("s.transaction_id"), col("s.gross_amount"), col("s.fee_amount"),
-                col("s.net_amount"), col("s.settlement_status"), col("t.transaction_timestamp"), col("t.transaction_status")))
+                col("s.net_amount"), col("s.settlement_status"), col("t.transaction_timestamp"), col("t.transaction_status")
+            )
+        )
 
+        logger.info("Merchant Settlement Mart created successfully")
         merchant_settlement_mart_df.show()
 
         s3_merchant_settlement_mart_path = f"s3a://{bucket_name}/{config.s3_merchant_settlement_mart}/"
+        logger.info("Writing Merchant Settlement Mart to : %s", s3_merchant_settlement_mart_path)
         data_writer = DataWriter("overwrite", "parquet")
         data_writer.dataframe_writer(transaction_performance_mart_df, s3_merchant_settlement_mart_path)
+        logger.info("Merchant Settlement Mart written successfully")
 
+        logger.info("=============== Building Refund Insights Mart ===============")
+        refund_insights_mart_df = (
+            df_refunds.alias("r") \
+                .join(
+                df_transactions.alias("t"),
+                col("r.transaction_id") == col("t.transaction_id"),
+                "left"
+            ) \
+                .join(
+                df_merchant.alias("m"),
+                col("m.merchant_id") == col("t.merchant_id"),
+                "left"
+            ) \
+                .join(
+                df_customer.alias("c"),
+                col("c.customer_id") == col("t.customer_id"),
+                "left"
+            ).select(col("r.refund_id"),col("r.transaction_id"),col("r.customer_id"),col("r.refund_timestamp"),col("r.refund_amount")
+                     ,col("r.refund_reason"),col("r.refund_status"),col("m.merchant_id"),col("m.merchant_name"),col("m.merchant_category")
+                     ,col("c.age_group"),col("c.city"),col("c.state"),col("t.transaction_amount"),col("t.transaction_status")
+                     ,col("t.transaction_timestamp"),col("t.channel_id"),
+                     year(col("refund_timestamp")).alias("refund_year"),
+                     month(col("refund_timestamp")).alias("refund_month")
+            )
+        )
+        logger.info("Refund Insights Mart created successfully")
+        refund_insights_mart_df.show()
+
+        s3_refund_insights_mart_path = f"s3a://{bucket_name}/{config.s3_refund_insights_mart}/"
+        logger.info("Writing Refund Insights Mart to : %s", s3_refund_insights_mart_path)
+        data_writer = DataWriter("overwrite", "parquet")
+        data_writer.dataframe_writer(transaction_performance_mart_df, s3_refund_insights_mart_path)
+        logger.info("Refund Insights Mart written successfully")
+
+        #customer_behaviour_mart_df =
+
+        logger.info("=============== All Data Marts Created Successfully ===============")
         # Success
                     # mark_file_completed(cursor, connection, file_name)
 
