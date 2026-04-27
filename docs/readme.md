@@ -235,7 +235,7 @@ python src/main.py
 ---
 
 ## What I Learned
-- Building layered batch pipelines
+- Building Layered Batch Pipelines
 - Spark Joins and Transformations
 - Data Mart Modeling
 - KPI design for Business Teams
@@ -258,4 +258,4 @@ python src/main.py
 ## Author
 
 #### Aishwarya Patankar
-Data Engineer | PySpark | SQL | AWS | Batch Pipelines
+Data Engineer | PySpark | SQL | AWS | Scalable Data Pipelines
