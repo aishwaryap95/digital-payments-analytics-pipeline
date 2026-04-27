@@ -54,17 +54,17 @@ The pipeline processes multiple CSV source files:
 
 ---
 
-# Architecture Diagram
-
+## Architecture Diagram
+../docs/digital-payments-pipeline-architecture.drawio.png
 ![digital-payments-pipeline-architecture.drawio.png](digital-payments-pipeline-architecture.drawio.png)
 
-../docs/digital-payments-pipeline-architecture.drawio.png
 
-# Data Model / Schema Diagram
 
+## Data Model / Schema Diagram
+../docs/digital-payments-star-schema.drawio.png
 ![digital-payments-star-schema.drawio.png](digital-payments-star-schema.drawio.png)
 
-../docs/digital-payments-star-schema.drawio.png
+
 
 ---
 
@@ -85,7 +85,7 @@ data_marts/
 ```
 ---
 
-# Pipeline Flow
+## Pipeline Flow
 
 1. Read source files from landing zone
 2. Move files to processing zone
@@ -101,7 +101,7 @@ data_marts/
 
 ---
 
-# Data Marts
+## Data Marts
 
 #### 1. Transaction Performance Mart
 
@@ -132,7 +132,7 @@ KPIs
 - Refund reason trend
 - Customer repeat refunds
 
-#### Partition Strategy
+## Partition Strategy
 
 Time-based partitioning is used for efficient reads and scalable storage.
 
@@ -142,25 +142,25 @@ Time-based partitioning is used for efficient reads and scalable storage.
 
 ---
 
-# Key Engineering Features
+## Key Engineering Features
 
-- Multi-file Batch Ingestion: Processes multiple dimension and fact files in a single run.
+- **Multi-file Batch Ingestion**: Processes multiple dimension and fact files in a single run.
 
-- File Lifecycle Management: Automates movement across landing, processing, processed, and failed zones.
+- **File Lifecycle Management**: Automates movement across landing, processing, processed, and failed zones.
 
-- Staging Control Table: Tracks file status using Active / Completed / Failed states.
+- **Staging Control Table**: Tracks file status using Active / Completed / Failed states.
 
-- Partitioned Parquet Marts: Optimized curated outputs for analytical workloads.
+- **Partitioned Parquet Marts**: Optimized curated outputs for analytical workloads.
 
-- Modular PySpark Architecture : Separate modules for ingestion, transformation, analytics, and utilities.
+- **Modular PySpark Architecture**: Separate modules for ingestion, transformation, analytics, and utilities.
 
-- KPI Analytics Layer: Business reporting queries built on top of curated marts.
+- **KPI Analytics Layer**: Business reporting queries built on top of curated marts.
 
-- Logging & Error Handling: Centralized logging with failure tracking and operational visibility.
+- **Logging & Error Handlin**g: Centralized logging with failure tracking and operational visibility.
 
 ---
 
-# Sample KPI Output
+## Sample KPI Output
 - Daily Transactions       : 1,000
 - Success Rate            : 78.8%
 - Top Revenue Channel     : UPI
@@ -171,9 +171,9 @@ Time-based partitioning is used for efficient reads and scalable storage.
 
 ---
 
-# How to Run
+## How to Run
 
-## Prerequisites
+#### Prerequisites
 
 - Python installed
 - Java installed
@@ -189,7 +189,7 @@ Time-based partitioning is used for efficient reads and scalable storage.
 #### 1. Clone Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/aishwaryap95/digital-payments-analytics-pipeline.git
 cd digital-payments-analytics-pipeline
 ```
 #### 2. Open in PyCharm
@@ -210,15 +210,15 @@ pip install -r requirements.txt
 ```
 #### 5. Configure Credentials
 
-Update AWS access key / secret key and project configs inside utility/config files.
+Update AWS access key and secret key and project configs inside ../dev/config.py file.
 
 #### 6. Generate Sample Source Files
 
 Run data generator:
 ```bash
-python src/test/digital_payments_data_upload_to_s3.py
+python src/test/generate_csv_data.py
 ```
-This creates sample CSV files and uploads to landing zone.
+This creates sample CSV files in local directory /spark_data.
 
 #### 7. Upload Files to S3 Landing Zone
 
@@ -234,28 +234,28 @@ python src/main.py
 ```
 ---
 
-# What I Learned
+## What I Learned
 - Building layered batch pipelines
-- Spark joins and transformations
-- Data mart modeling
-- KPI design for business teams
-- S3 file lifecycle orchestration
-- Partition strategy for analytics workloads
+- Spark Joins and Transformations
+- Data Mart Modeling
+- KPI design for Business Teams
+- S3 file Lifecycle Orchestration
+- Partition Strategy for Analytics Workloads
 
 --- 
 
-# Future Enhancements
-- Airflow orchestration
-- Incremental loads
-- Power BI / Tableau dashboards
-- Data quality framework
-- CI/CD deployment
-- Alerting & monitoring
-- Unit test coverage
+## Future Enhancements
+- Airflow Orchestration
+- Incremental Loads
+- Power BI / Tableau Dashboards
+- Data Quality Framework
+- CI/CD Deployment
+- Alerting & Monitoring
+- Unit Test Coverage
 
 ---
 
-# Author
+## Author
 
 #### Aishwarya Patankar
 Data Engineer | PySpark | SQL | AWS | Batch Pipelines
