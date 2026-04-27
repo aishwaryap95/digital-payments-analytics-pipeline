@@ -11,6 +11,7 @@ from src.validation.schema_validator import *
 from src.utils.helper import *
 from src.storage.read.payment_reader import *
 from src.storage.write.data_writer import *
+from src.analytics.transaction_kpi import *
 
 LANDING = config.s3_landing_directory
 PROCESSING = config.s3_processing_directory
@@ -152,7 +153,7 @@ def main():
         logger.info("Transaction Performance Mart created successfully")
         transaction_performance_mart_df.show()
 
-        s3_transaction_performance_mart_path = f"s3a://{bucket_name}/{config.s3_transaction_performance_mart}/"
+        s3_transaction_performance_mart_path = f"s3a://{bucket_name}/{config.s3_transaction_performance_mart}"
         logger.info("Writing Transaction Performance Mart to : %s", s3_transaction_performance_mart_path)
         data_writer = DataWriter("overwrite","parquet")
         data_writer.dataframe_writer(transaction_performance_mart_df, s3_transaction_performance_mart_path)
@@ -219,25 +220,33 @@ def main():
         logger.info("Refund Insights Mart created successfully")
         refund_insights_mart_df.show()
 
-        s3_refund_insights_mart_path = f"s3a://{bucket_name}/{config.s3_refund_insights_mart}/"
+        s3_refund_insights_mart_path = f"s3a://{bucket_name}/{config.s3_refund_insights_mart}"
         logger.info("Writing Refund Insights Mart to : %s", s3_refund_insights_mart_path)
         data_writer = DataWriter("overwrite", "parquet")
         data_writer.dataframe_writer(transaction_performance_mart_df, s3_refund_insights_mart_path)
         logger.info("Refund Insights Mart written successfully")
 
-        #customer_behaviour_mart_df =
-
         logger.info("=============== All Data Marts Created Successfully ===============")
+
+        logger.info("=============== Running KPI Layer ===============")
+
+        run_transaction_kpis(transaction_performance_mart_df)
+        #run_settlement_kpis(merchant_settlement_mart_df)
+        #run_refund_kpis(refund_insights_mart_df)
+
+        logger.info("=============== KPI Layer Completed ===============")
+
         # Success
-                    # mark_file_completed(cursor, connection, file_name)
+        # mark_file_completed(cursor, connection, processing_files)
 
-                    # Move to processed
-                    # logger.info(f"Moving file to processed {file_name}")
-                    # move_s3_file(s3_client,config.bucket_name,f"{PROCESSING}/{file_name}",PROCESSED)
+        # Move to processed
+        # logger.info(f"Moving file to processed {file_name}")
+        # move_s3_file(s3_client,config.bucket_name,f"{PROCESSING}/{file_name}",PROCESSED)
 
-                # # Mark Failed
-                # mark_file_failed(cursor,connection,file_name,str(e),"SYSTEM_FAILURE")
-                # # Move to failedmove_s3_file( s3_client, config.bucket_name, f"{PROCESSING}/{file_name}", FAILED )
+        # Mark Failed
+        # mark_file_failed(cursor,connection,file_name,str(e),"SYSTEM_FAILURE")
+        # Move to failed
+        # move_s3_file( s3_client, config.bucket_name, f"{PROCESSING}/{file_name}", FAILED )
 
     except Exception as e:
         logger.error(f"Pipeline Failed : {e}")
