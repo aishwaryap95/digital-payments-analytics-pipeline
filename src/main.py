@@ -89,11 +89,11 @@ def main():
         # else:
         #     logger.info("No error files found. All files are valid.")
 
-        processing_files = []
         for file in csv_files:
                 file_name = file.split('/')[-1]
                 logger.info(f"Processing file: {file_name}")
 
+                processing_files = []
                 try:
                     # Move file to /processing
                     logger.info("Moving file to /processing: {file_name}")
@@ -113,6 +113,15 @@ def main():
         logger.info("*************** Loading DataFrames ***************")
         df_map = load_payment_dfs(spark, processing_files)
 
+        required_keys = [
+          "merchant", "channel",
+            "transactions", "customer", "refunds", "settlements"
+        ]
+
+        for key in required_keys:
+            if df_map.get(key) is None:
+                raise Exception(f"{key} dataframe not loaded")
+
         df_customer = df_map.get("customer")
         df_merchant = df_map.get("merchant")
         df_channel = df_map.get("channel")
@@ -121,6 +130,7 @@ def main():
         df_settlements = df_map.get("settlements")
 
         logger.info("*************** Source DataFrames loaded successfully ***************")
+        logger.info("Loaded df_map keys: %s", df_map.keys())
 
         logger.info("Customer records count      : %s", df_customer.count())
         logger.info("Merchant records count      : %s", df_merchant.count())
@@ -189,7 +199,7 @@ def main():
         s3_merchant_settlement_mart_path = f"s3a://{bucket_name}/{config.s3_merchant_settlement_mart}/"
         logger.info("Writing Merchant Settlement Mart to : %s", s3_merchant_settlement_mart_path)
         data_writer = DataWriter("overwrite", "parquet")
-        data_writer.dataframe_writer(transaction_performance_mart_df, s3_merchant_settlement_mart_path)
+        data_writer.dataframe_writer(merchant_settlement_mart_df, s3_merchant_settlement_mart_path)
         logger.info("Merchant Settlement Mart written successfully")
 
         logger.info("=============== Building Refund Insights Mart ===============")
@@ -223,7 +233,7 @@ def main():
         s3_refund_insights_mart_path = f"s3a://{bucket_name}/{config.s3_refund_insights_mart}"
         logger.info("Writing Refund Insights Mart to : %s", s3_refund_insights_mart_path)
         data_writer = DataWriter("overwrite", "parquet")
-        data_writer.dataframe_writer(transaction_performance_mart_df, s3_refund_insights_mart_path)
+        data_writer.dataframe_writer(refund_insights_mart_df, s3_refund_insights_mart_path)
         logger.info("Refund Insights Mart written successfully")
 
         logger.info("=============== All Data Marts Created Successfully ===============")
@@ -236,12 +246,25 @@ def main():
 
         logger.info("=============== KPI Layer Completed ===============")
 
-        # Success
-        # mark_file_completed(cursor, connection, processing_files)
+        # ==========================================
+        # SUCCESS FLOW
+        # ==========================================
+        logger.info("=============== Marking Files Completed ===============")
 
-        # Move to processed
-        # logger.info(f"Moving file to processed {file_name}")
-        # move_s3_file(s3_client,config.bucket_name,f"{PROCESSING}/{file_name}",PROCESSED)
+        for file_path in processing_files:
+            file_name = file_path.split("/")[-1]
+
+            try:
+                # Update DB status = Completed
+                mark_file_completed(cursor, connection, file_name)
+
+                # Move processing -> processed
+                logger.info("Moving file to processed : %s", file_name)
+
+                move_s3_file(s3_client, config.bucket_name, file_path, PROCESSED)
+
+            except Exception as e:
+                logger.error("Failed to complete file %s : %s", file_name, e)
 
         # Mark Failed
         # mark_file_failed(cursor,connection,file_name,str(e),"SYSTEM_FAILURE")
@@ -250,7 +273,17 @@ def main():
 
     except Exception as e:
         logger.error(f"Pipeline Failed : {e}")
-        raise e
+
+        for file_path in processing_files:
+            file_name = file_path.split("/")[-1]
+
+            try:
+                mark_file_failed(cursor, connection, file_name, str(e), "SYSTEM_FAILURE")
+                move_s3_file(s3_client, config.bucket_name, file_path, FAILED)
+
+            except Exception as inner_error:
+                logger.error( "Failed to move/update failed file %s : %s", file_name, inner_error )
+        raise
 
     finally:
         cursor.close()
