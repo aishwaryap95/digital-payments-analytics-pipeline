@@ -40,36 +40,34 @@ Business teams need reliable curated datasets for:
 - Operational dashboards
 
 ---
-
-## Source Files
-
-The pipeline processes multiple CSV source files:
-
-- `dim_customer.csv`
-- `dim_merchant.csv`
-- `dim_channel.csv`
-- `fact_transactions.csv`
-- `fact_refunds.csv`
-- `fact_settlements.csv`
-
----
-
 ## Architecture Diagram
 ../docs/digital-payments-pipeline-architecture.drawio.png
 ![digital-payments-pipeline-architecture.drawio.png](digital-payments-pipeline-architecture.drawio.png)
-
-
-
+---
 ## Data Model / Schema Diagram
 ../docs/digital-payments-star-schema.drawio.png
 ![digital-payments-star-schema.drawio.png](digital-payments-star-schema.drawio.png)
-
-
+---
+## Source Files
+The pipeline processes multiple CSV source files:
+![img_1.png](img_1.png)
+---
+## Control Table
+![img_3.png](img_3.png)
+---
+## Data Mart Output
+![img_5.png](img_5.png)
+---
+## KPI Output
+![img_6.png](img_6.png)
+---
+## Failure Handling
+![img_4.png](img_4.png)
 
 ---
 
 ## S3 Data Lake Architecture
-
+![img_2.png](img_2.png)
 ```text
 s3://bucket/
 
@@ -169,7 +167,6 @@ Time-based partitioning is used for efficient reads and scalable storage.
 - Pending Settlements     : 9.2%
 - Top Refund Reason       : Duplicate Charge
 
-![img.png](img.png)
 ---
 
 ## How to Run
