@@ -12,6 +12,7 @@ from src.utils.helper import *
 from src.storage.read.payment_reader import *
 from src.storage.write.data_writer import *
 from src.analytics.transaction_kpi import *
+from src.analytics.refund_kpi import *
 
 LANDING = config.s3_landing_directory
 PROCESSING = config.s3_processing_directory
@@ -232,7 +233,7 @@ def main():
 
         run_transaction_kpis(transaction_performance_mart_df)
         #run_settlement_kpis(merchant_settlement_mart_df)
-        #run_refund_kpis(refund_insights_mart_df)
+        run_refund_kpis(refund_insights_mart_df, transaction_performance_mart_df)
 
         logger.info("=============== KPI Layer Completed ===============")
 
@@ -263,7 +264,7 @@ def main():
             file_name = file_path.split("/")[-1]
 
             try:
-                mark_file_failed(cursor, connection, file_name, str(e), "SYSTEM_FAILURE")
+                upsert_file_failed(cursor, connection, file_name, file_path, str(e), "SYSTEM_FAILURE")
                 move_s3_file(s3_client, config.bucket_name, file_path, FAILED)
 
             except Exception as inner_error:
