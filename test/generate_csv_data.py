@@ -14,7 +14,7 @@ os.makedirs(file_location, exist_ok=True)
 run_date = datetime.now().strftime("%Y%m%d")
 
 # records per daily drop
-daily_record_count = 1000
+daily_record_count = 10000
 
 # fresh data every day, same if rerun same day
 random.seed(int(run_date))

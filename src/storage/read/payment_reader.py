@@ -11,9 +11,9 @@ def read_csv(spark, path, schema):
         .load(path)
     )
 
-def load_payment_dfs(spark, csv_files):
+def load_payment_dfs(spark, processing_files):
     df_map = {}
-    for file in csv_files:
+    for file in processing_files:
         file_name = file.split("/")[-1].lower()
         logger.info("Reading file: %s", file_name)
 

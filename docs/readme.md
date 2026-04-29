@@ -161,7 +161,7 @@ Time-based partitioning is used for efficient reads and scalable storage.
 ---
 
 ## Sample KPI Output
-- Daily Transactions       : 1,000
+- Daily Transactions       : 10,000
 - Success Rate            : 78.8%
 - Top Revenue Channel     : UPI
 - Highest Payment City    : Mumbai
@@ -169,6 +169,7 @@ Time-based partitioning is used for efficient reads and scalable storage.
 - Pending Settlements     : 9.2%
 - Top Refund Reason       : Duplicate Charge
 
+![img.png](img.png)
 ---
 
 ## How to Run

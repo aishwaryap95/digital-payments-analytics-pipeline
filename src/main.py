@@ -89,11 +89,11 @@ def main():
         # else:
         #     logger.info("No error files found. All files are valid.")
 
+        processing_files = []
         for file in csv_files:
                 file_name = file.split('/')[-1]
                 logger.info(f"Processing file: {file_name}")
 
-                processing_files = []
                 try:
                     # Move file to /processing
                     logger.info("Moving file to /processing: {file_name}")
@@ -110,17 +110,10 @@ def main():
                     logger.error("Failed before spark load %s : %s", file_name, e)
 
         # Processing
+        logger.info("processing_files = %s", processing_files)
+
         logger.info("*************** Loading DataFrames ***************")
         df_map = load_payment_dfs(spark, processing_files)
-
-        required_keys = [
-          "merchant", "channel",
-            "transactions", "customer", "refunds", "settlements"
-        ]
-
-        for key in required_keys:
-            if df_map.get(key) is None:
-                raise Exception(f"{key} dataframe not loaded")
 
         df_customer = df_map.get("customer")
         df_merchant = df_map.get("merchant")
@@ -130,7 +123,6 @@ def main():
         df_settlements = df_map.get("settlements")
 
         logger.info("*************** Source DataFrames loaded successfully ***************")
-        logger.info("Loaded df_map keys: %s", df_map.keys())
 
         logger.info("Customer records count      : %s", df_customer.count())
         logger.info("Merchant records count      : %s", df_merchant.count())
@@ -265,11 +257,6 @@ def main():
 
             except Exception as e:
                 logger.error("Failed to complete file %s : %s", file_name, e)
-
-        # Mark Failed
-        # mark_file_failed(cursor,connection,file_name,str(e),"SYSTEM_FAILURE")
-        # Move to failed
-        # move_s3_file( s3_client, config.bucket_name, f"{PROCESSING}/{file_name}", FAILED )
 
     except Exception as e:
         logger.error(f"Pipeline Failed : {e}")

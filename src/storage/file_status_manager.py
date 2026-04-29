@@ -69,6 +69,8 @@ def mark_file_completed(cursor, connection, file_name):
     statement = f"""
     UPDATE {DB_NAME}.{STAGING_TABLE}
     SET status = 'C',
+    error_type = NULL,
+    error_message = NULL,
     updated_date = NOW()
     WHERE file_name = %s
     """
