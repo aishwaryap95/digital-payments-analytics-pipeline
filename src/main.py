@@ -60,34 +60,27 @@ def main():
         logger.info("Valid CSV file count: %s",len(csv_files))
         logger.info("Invalid file count: %s",len(error_files))
 
+        # Move Invalid Files to failed/
+        for file in error_files:
+            file_name = file.split("/")[-1]
+            try:
+                logger.warning("Invalid file detected: %s",file_name)
+
+                # mark failed in staging table
+                failed_path = build_s3a_path(config.bucket_name, FAILED, file_name)
+
+                upsert_file_failed(cursor, connection, file_name, failed_path, "INVALID_FILE", "File failed extension validation")
+                move_s3_file(s3_client, config.bucket_name, file, FAILED)
+
+                logger.info("Moved invalid file to failed : %s", file_name)
+
+            except Exception as e:
+                logger.error("Failed handling invalid file %s : %s",file_name,e)
+
+
         logger.info("*************** Creating Spark Session ***************")
         spark = spark_session()
         logger.info("*************** Spark Session created. ***************")
-
-
-        # logger.info("*************** Moving error data to error directory if any ***************")
-        # if error_files:
-        #     for file_path in error_files:
-        #         file_name = file_path.rstrip('/').split('/')[-1]
-        #         logger.info("Extracted file name: %s", file_name)
-        #
-        #         elif missing_columns:
-        #             error_files.append((file_path, missing_columns, "SCHEMA_FAILURE"))
-        #         else:
-        #             error_type = None
-        #
-        #         logger.info( "Moving file %s to failed folder due to %s", file_name, error_type )
-
-        #         try:
-        #             # Move file in S3
-        #             move_s3_file( s3_client, config.bucket_name, file_path, FAILED )
-        #
-        #             # Update DB
-        #             mark_file_failed( cursor, connection, file_name, error_message, error_type )
-        #         except Exception as e:
-        #             logger.error( "Failed to move/update file %s: %s", file_name,  str(e))
-        # else:
-        #     logger.info("No error files found. All files are valid.")
 
         processing_files = []
         for file in csv_files:

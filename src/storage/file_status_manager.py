@@ -80,35 +80,50 @@ def mark_file_completed(cursor, connection, file_name):
 
 
 # ---------------------------------------------------
-# 4. Mark File Failed
+# 4. Upsert File Failed
 # ---------------------------------------------------
 
-def mark_file_failed(cursor, connection, file_name, error_message, error_type):
-
-    logger.error(
-        "Marking file '%s' as Failed | Error Type: %s | Error Message: %s",
+def upsert_file_failed(
+        cursor,
+        connection,
         file_name,
+        file_location,
+        error_message,
+        error_type):
+
+    logger.error("Upserting file '%s' as Failed | Error Type: %s | Error Message: %s", file_name, error_type, error_message )
+
+    statement = f"""
+    INSERT INTO {DB_NAME}.{STAGING_TABLE}
+    (
+        file_name,
+        file_location,
+        created_date,
+        updated_date,
+        status,
         error_type,
         error_message
     )
+    VALUES ( %s, %s, NOW(), NOW(), 'F', %s, %s )
 
-    statement = f"""
-    UPDATE {DB_NAME}.{STAGING_TABLE}
-    SET status = 'F',
-    error_type = %s,
-    error_message = %s,
-    updated_date = NOW()
-    WHERE file_name = %s
+    ON DUPLICATE KEY UPDATE
+        status = 'F',
+        file_location = VALUES(file_location),
+        error_type = VALUES(error_type),
+        error_message = VALUES(error_message),
+        updated_date = NOW()
     """
 
-    cursor.execute(statement, (error_type, error_message, file_name))
-    rows_updated = cursor.rowcount
+    cursor.execute(
+        statement,
+        ( file_name, file_location, error_type, error_message)
+    )
     connection.commit()
 
-    if rows_updated > 0:
-        logger.error("File '%s' successfully marked as Failed",file_name)
-    else:
-        logger.warning("File '%s' not found in staging table. No rows updated.",file_name)
+    logger.error(
+        "File '%s' successfully upserted as Failed",
+        file_name
+    )
 
 # ---------------------------------------------------
 # 5. Reprocess Failed Files
