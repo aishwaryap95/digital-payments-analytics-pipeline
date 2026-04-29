@@ -141,7 +141,9 @@ def main():
                 col("t.transaction_id"), col("t.customer_id"), col("t.merchant_id"), col("t.channel_id"),
                 col("t.transaction_timestamp"), col("t.transaction_amount"), col("t.transaction_status"), col("t.city"),
                 col("t.processing_fee"), col("c.channel_type"), col("c.provider_name"), col("m.merchant_name"),
-                col("m.merchant_category"), col("m.state"), col("m.risk_tier"), col("m.settlement_cycle")
+                col("m.merchant_category"), col("m.state"), col("m.risk_tier"), col("m.settlement_cycle"),
+                year(col("t.transaction_timestamp")).alias("transaction_year"),
+                month(col("t.transaction_timestamp")).alias("transaction_month")
             )
         )
 
@@ -151,7 +153,8 @@ def main():
         s3_transaction_performance_mart_path = f"s3a://{bucket_name}/{config.s3_transaction_performance_mart}"
         logger.info("Writing Transaction Performance Mart to : %s", s3_transaction_performance_mart_path)
         data_writer = DataWriter("overwrite","parquet")
-        data_writer.dataframe_writer(transaction_performance_mart_df, s3_transaction_performance_mart_path)
+        data_writer.dataframe_writer( transaction_performance_mart_df, s3_transaction_performance_mart_path,
+                                      ["transaction_year", "transaction_month"])
         logger.info("Transaction Performance Mart written successfully")
 
         logger.info("=============== Building Merchant Settlement Mart ===============")
@@ -184,7 +187,8 @@ def main():
         s3_merchant_settlement_mart_path = f"s3a://{bucket_name}/{config.s3_merchant_settlement_mart}/"
         logger.info("Writing Merchant Settlement Mart to : %s", s3_merchant_settlement_mart_path)
         data_writer = DataWriter("overwrite", "parquet")
-        data_writer.dataframe_writer(merchant_settlement_mart_df, s3_merchant_settlement_mart_path)
+        data_writer.dataframe_writer(merchant_settlement_mart_df, s3_merchant_settlement_mart_path,
+                                     ["settlement_year","settlement_month"])
         logger.info("Merchant Settlement Mart written successfully")
 
         logger.info("=============== Building Refund Insights Mart ===============")
@@ -218,7 +222,8 @@ def main():
         s3_refund_insights_mart_path = f"s3a://{bucket_name}/{config.s3_refund_insights_mart}"
         logger.info("Writing Refund Insights Mart to : %s", s3_refund_insights_mart_path)
         data_writer = DataWriter("overwrite", "parquet")
-        data_writer.dataframe_writer(refund_insights_mart_df, s3_refund_insights_mart_path)
+        data_writer.dataframe_writer(refund_insights_mart_df, s3_refund_insights_mart_path,
+                                     ["refund_year","refund_month"])
         logger.info("Refund Insights Mart written successfully")
 
         logger.info("=============== All Data Marts Created Successfully ===============")

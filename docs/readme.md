@@ -57,6 +57,7 @@ The pipeline processes multiple CSV source files:
 ---
 ## Data Mart Output
 ![img_5.png](img_5.png)
+![img_7.png](img_7.png)
 ---
 ## KPI Output
 ![img_6.png](img_6.png)
