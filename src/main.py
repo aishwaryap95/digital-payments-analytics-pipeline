@@ -13,6 +13,7 @@ from src.storage.read.payment_reader import *
 from src.storage.write.data_writer import *
 from src.analytics.transaction_kpi import *
 from src.analytics.refund_kpi import *
+from src.analytics.settlement_kpi import *
 
 LANDING = config.s3_landing_directory
 PROCESSING = config.s3_processing_directory
@@ -153,7 +154,7 @@ def main():
 
         s3_transaction_performance_mart_path = f"s3a://{bucket_name}/{config.s3_transaction_performance_mart}"
         logger.info("Writing Transaction Performance Mart to : %s", s3_transaction_performance_mart_path)
-        data_writer = DataWriter("overwrite","parquet")
+        data_writer = DataWriter("append","parquet")
         data_writer.dataframe_writer( transaction_performance_mart_df, s3_transaction_performance_mart_path,
                                       ["transaction_year", "transaction_month"])
         logger.info("Transaction Performance Mart written successfully")
@@ -187,7 +188,7 @@ def main():
 
         s3_merchant_settlement_mart_path = f"s3a://{bucket_name}/{config.s3_merchant_settlement_mart}/"
         logger.info("Writing Merchant Settlement Mart to : %s", s3_merchant_settlement_mart_path)
-        data_writer = DataWriter("overwrite", "parquet")
+        data_writer = DataWriter("append", "parquet")
         data_writer.dataframe_writer(merchant_settlement_mart_df, s3_merchant_settlement_mart_path,
                                      ["settlement_year","settlement_month"])
         logger.info("Merchant Settlement Mart written successfully")
@@ -222,7 +223,7 @@ def main():
 
         s3_refund_insights_mart_path = f"s3a://{bucket_name}/{config.s3_refund_insights_mart}"
         logger.info("Writing Refund Insights Mart to : %s", s3_refund_insights_mart_path)
-        data_writer = DataWriter("overwrite", "parquet")
+        data_writer = DataWriter("append", "parquet")
         data_writer.dataframe_writer(refund_insights_mart_df, s3_refund_insights_mart_path,
                                      ["refund_year","refund_month"])
         logger.info("Refund Insights Mart written successfully")
@@ -232,7 +233,7 @@ def main():
         logger.info("=============== Running KPI Layer ===============")
 
         run_transaction_kpis(transaction_performance_mart_df)
-        #run_settlement_kpis(merchant_settlement_mart_df)
+        run_settlement_kpis(merchant_settlement_mart_df)
         run_refund_kpis(refund_insights_mart_df, transaction_performance_mart_df)
 
         logger.info("=============== KPI Layer Completed ===============")
