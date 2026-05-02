@@ -12,22 +12,46 @@ def read_csv(spark, path, schema):
     )
 
 def load_payment_dfs(spark, processing_files):
+
     df_map = {}
+
     for file in processing_files:
         file_name = file.split("/")[-1].lower()
         logger.info("Reading file: %s", file_name)
 
+        df = None
+
         if "dim_customer" in file_name:
-            df_map["customer"] = read_csv(spark, file, customer_schema)
+            df = read_csv(spark, file, customer_schema)
+            key = "customer"
+
         elif "dim_merchant" in file_name:
-            df_map["merchant"] = read_csv(spark, file, merchant_schema)
+            df = read_csv(spark, file, merchant_schema)
+            key = "merchant"
+
         elif "dim_payment_channel" in file_name:
-            df_map["channel"] = read_csv(spark, file, channel_schema)
+            df = read_csv(spark, file, channel_schema)
+            key = "channel"
+
         elif "fact_refunds" in file_name:
-            df_map["refunds"] = read_csv(spark, file, refund_schema)
+            df = read_csv(spark, file, refund_schema)
+            key = "refunds"
+
         elif "fact_settlements" in file_name:
-            df_map["settlements"] = read_csv(spark, file, settlement_schema)
+            df = read_csv(spark, file, settlement_schema)
+            key = "settlements"
+
         elif "fact_transactions" in file_name:
-            df_map["transactions"] = read_csv(spark, file, transaction_schema)
+            df = read_csv(spark, file, transaction_schema)
+            key = "transactions"
+
+        else:
+            continue
+
+        # 🔥 UNION LOGIC
+        if key in df_map:
+            df_map[key] = df_map[key].unionByName(df)
+        else:
+            df_map[key] = df
 
     return df_map
