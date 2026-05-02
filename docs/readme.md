@@ -1,15 +1,38 @@
 # Digital Payments Analytics Pipeline
 
-End-to-end batch data engineering project built using **PySpark, AWS S3, and MySQL** to process digital payment transaction files, create curated data marts, and generate business KPIs for analytics reporting.
+**Failure-Resilient Batch Data Pipeline using PySpark & AWS**
 
 ---
 
-## Project Overview
+## 📌 Overview
 
-This project simulates a real-world digital payments ecosystem where upstream systems drop CSV files into an S3 landing zone. The pipeline validates files, processes payment data using PySpark, builds curated marts, and generates insights for transaction monitoring, merchant settlements, and refund analytics.
+Built an end-to-end batch data pipeline to process digital payment transactions and generate curated datasets for business reporting.
+
+The pipeline is designed to handle failures gracefully and support controlled reprocessing without introducing duplicate data.
 
 ---
 
+## ⚠️ Problem
+
+Digital payment systems generate high-volume data across transactions, settlements, and refunds. During ingestion, failures can occur due to system or network issues.
+
+Without proper handling, this leads to:
+
+- Duplicate data during reprocessing
+- Inconsistent KPIs (e.g., success rate, revenue)
+- Reduced trust in analytics
+
+---
+
+## ✅ Solution
+
+Implemented a failure-aware batch pipeline with:
+
+- Controlled retry mechanism for failed files
+- Deduplication using business keys
+- Consistent data marts for analytics
+
+---
 ## Tech Stack
 
 - **Languages** :- Python, SQL 
@@ -17,27 +40,6 @@ This project simulates a real-world digital payments ecosystem where upstream sy
 - **Cloud & Storage** :- AWS S3, Parquet, CSV
 - **Database** :- MySQL
 - **Tools** :- Git, GitHub, PyCharm
-
----
-
-## Business Problem
-
-Digital payment platforms process high transaction volumes across:
-
-- UPI
-- Cards
-- Wallets
-- Net Banking
-- Merchant payouts
-- Refund requests
-
-Business teams need reliable curated datasets for:
-
-- Transaction success monitoring
-- Revenue reporting
-- Merchant settlement tracking
-- Refund trend analysis
-- Operational dashboards
 
 ---
 ## Architecture Diagram
@@ -60,15 +62,18 @@ The pipeline processes multiple CSV source files:
 ![img_7.png](img_7.png)
 ---
 ## KPI Output
-![img_6.png](img_6.png)
+![img_10.png](img_10.png)
+![img_8.png](img_8.png)
+
 ---
 ## Failure Handling
 ![img_4.png](img_4.png)
 
 ---
 
-## S3 Data Lake Architecture
-![img_2.png](img_2.png)
+## 📂 Data Lake Structure
+![img_11.png](img_11.png)
+
 ```text
 s3://bucket/
 
@@ -84,89 +89,79 @@ data_marts/
 ```
 ---
 
+## ⚙️ Key Features
+
+🔁 Controlled Reprocessing
+- Tracks file status in a control table
+- Retries only transient failures (SYSTEM_FAILURE, NETWORK_FAILURE)
+- Re-injects failed files into the pipeline
+
+♻️ Deduplication for Data Consistency
+- Handles multi-file ingestion using unionByName
+- Removes duplicates using primary/business keys
+- Prevents duplicate records during reprocessing
+
+📦 Multi-file Ingestion
+- Supports multiple input files per dataset
+- Combines and processes them as a unified dataset
+
+🗂 File Lifecycle Management (S3)
+- landing → processing → processed / failed
+- Ensures traceability and clean execution flow
+
+🧾 Control Table Tracking
+- Tracks file states: Active, Completed, Failed
+- Enables retry logic and pipeline observability
+
+📊 Partitioned Data Marts
+- Stored in Parquet format
+- Partitioned by time (year/month) for efficient querying
+
+---
+
 ## Pipeline Flow
 
-1. Read source files from landing zone
-2. Move files to processing zone
-3. Mark files Active in staging table
-4. Validate schema / format
-5. Load Spark DataFrames
-6. Build curated marts
-7. Write partitioned parquet marts to S3
-8. Run KPI queries
-9. Mark files Completed
-10. Move files to processed zone
-11. Failed files moved to failed zone
+1. Read files from landing zone
+2. Validate file format
+3. Move files to processing
+4. Load into PySpark DataFrames
+5. Apply joins and transformations
+6. Deduplicate records
+7. Build data marts
+8. Write partitioned outputs
+9. Update control table
+10. Move files to processed/failed
 
 ---
 
-## Data Marts
+## Data Marts & KPIs
 
 #### 1. Transaction Performance Mart
-
-Tracks payment throughput and operational performance.
-
-KPIs
 - Daily transaction volume
-- Success rate %
+- Success rate
 - Revenue by channel
-- City-wise payment amount
-- Monthly success rate by channel
+- City-wise transaction trends
+
 #### 2. Merchant Settlement Mart
-
-Tracks merchant payouts and settlement operations.
-
-KPIs
 - Total settled amount
-- Pending settlements %
+- Pending settlement %
 - Top merchants by payout
-- Fee revenue by merchant category
+
 #### 3. Refund Insights Mart
-
-Tracks refund behaviour and customer issues.
-
-KPIs
-- Refund rate %
-- Top refund merchants
-- Refund reason trend
-- Customer repeat refunds
-
-## Partition Strategy
-
-Time-based partitioning is used for efficient reads and scalable storage.
-
-- transaction_year / transaction_month
-- settlement_year / settlement_month 
-- refund_year / refund_month
-
----
-
-## Key Engineering Features
-
-- **Multi-file Batch Ingestion**: Processes multiple dimension and fact files in a single run.
-
-- **File Lifecycle Management**: Automates movement across landing, processing, processed, and failed zones.
-
-- **Staging Control Table**: Tracks file status using Active / Completed / Failed states.
-
-- **Partitioned Parquet Marts**: Optimized curated outputs for analytical workloads.
-
-- **Modular PySpark Architecture**: Separate modules for ingestion, transformation, analytics, and utilities.
-
-- **KPI Analytics Layer**: Business reporting queries built on top of curated marts.
-
-- **Logging & Error Handlin**g: Centralized logging with failure tracking and operational visibility.
+- Refund rate
+- Refund reasons
+- Repeat refund patterns
 
 ---
 
 ## Sample KPI Output
 - Daily Transactions       : 10,000
-- Success Rate            : 78.8%
+- Success Rate            : 77.3%
 - Top Revenue Channel     : UPI
 - Highest Payment City    : Mumbai
-- Refund Rate             : 6.4%
-- Pending Settlements     : 9.2%
-- Top Refund Reason       : Duplicate Charge
+- Refund Rate             : 1.29%
+- Pending Settlements     : 12%
+- Top Refund Reason       : Duplicate Payment
 
 ---
 
@@ -233,28 +228,15 @@ python src/main.py
 ```
 ---
 
-## What I Learned
-- Building Layered Batch Pipelines
-- Spark Joins and Transformations
-- Data Mart Modeling
-- KPI design for Business Teams
-- S3 file Lifecycle Orchestration
-- Partition Strategy for Analytics Workloads
+## 🔮 Future Enhancements
 
---- 
-
-## Future Enhancements
-- Airflow Orchestration
-- Incremental Loads
-- Power BI / Tableau Dashboards
-- Data Quality Framework
-- CI/CD Deployment
-- Alerting & Monitoring
-- Unit Test Coverage
+- Workflow orchestration (Airflow)
+- Data quality checks
+- Monitoring & alerting
 
 ---
 
 ## Author
 
 #### Aishwarya Patankar
-Data Engineer | PySpark | SQL | AWS | Scalable Data Pipelines
+Data Engineer | PySpark | SQL | AWS 
