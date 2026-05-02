@@ -43,36 +43,54 @@ Implemented a failure-aware batch pipeline with:
 
 ---
 ## Architecture Diagram
-../docs/digital-payments-pipeline-architecture.drawio.png
+
 ![digital-payments-pipeline-architecture.drawio.png](digital-payments-pipeline-architecture.drawio.png)
+
 ---
+
 ## Data Model / Schema Diagram
-../docs/digital-payments-star-schema.drawio.png
+
 ![digital-payments-star-schema.drawio.png](digital-payments-star-schema.drawio.png)
+
 ---
+
 ## Source Files
-The pipeline processes multiple CSV source files:
+
 ![img_1.png](img_1.png)
+
 ---
+
 ## Control Table
+
 ![img_3.png](img_3.png)
+
 ---
+
 ## Data Mart Output
+
 ![img_5.png](img_5.png)
+
 ![img_7.png](img_7.png)
+
 ---
+
 ## KPI Output
+
 ![img_10.png](img_10.png)
+
 ![img_8.png](img_8.png)
 
 ---
+
 ## Failure Handling
+
 ![img_4.png](img_4.png)
 
 ---
 
 ## 📂 Data Lake Structure
-![img_11.png](img_11.png)
+
+![img_12.png](img_12.png)
 
 ```text
 s3://bucket/
