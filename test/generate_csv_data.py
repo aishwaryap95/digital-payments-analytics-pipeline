@@ -146,10 +146,10 @@ df_merchant.to_csv(
 # ===================================================
 
 statuses = (
-    ["SUCCESS"] * 78 +
-    ["FAILED"] * 12 +
-    ["PENDING"] * 7 +
-    ["REVERSED"] * 3
+    ["SUCCESS"] * 92 +
+    ["FAILED"] * 5 +
+    ["PENDING"] * 2 +
+    ["REVERSED"] * 1
 )
 
 fail_reasons = [

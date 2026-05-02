@@ -129,15 +129,12 @@ def upsert_file_failed(
 # 5. Reprocess Failed Files
 # ---------------------------------------------------
 
-def reprocess_failed_files(cursor):
-    logger.info("Checking failed files for reprocessing")
-
-    statement = f"""
-    SELECT file_name 
-    FROM {DB_NAME}.{STAGING_TABLE}
-    WHERE status = 'F'
-    AND error_type IN ('SYSTEM_FAILURE','NETWORK_FAILURE')
+def get_retryable_failed_files(cursor):
+    query = f"""
+        SELECT file_name, file_location
+        FROM {DB_NAME}.{STAGING_TABLE}
+        WHERE status = 'F'
+        AND error_type IN ('SYSTEM_FAILURE', 'NETWORK_FAILURE')
     """
-
-    cursor.execute(statement)
+    cursor.execute(query)
     return cursor.fetchall()
