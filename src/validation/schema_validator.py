@@ -1,7 +1,7 @@
 from src.utils.logging_config import logger
 from resources.dev import config
 from src.storage.move.move_files import move_s3_file
-from src.storage.file_status_manager import mark_file_failed
+from src.storage.file_status_manager import *
 
 # FILE Level Validation
 def validate_input_files(all_files):

@@ -14,7 +14,7 @@ os.makedirs(file_location, exist_ok=True)
 run_date = datetime.now().strftime("%Y%m%d")
 
 # records per daily drop
-daily_record_count = 1000
+daily_record_count = 10000
 
 # fresh data every day, same if rerun same day
 random.seed(int(run_date))
@@ -146,10 +146,10 @@ df_merchant.to_csv(
 # ===================================================
 
 statuses = (
-    ["SUCCESS"] * 78 +
-    ["FAILED"] * 12 +
-    ["PENDING"] * 7 +
-    ["REVERSED"] * 3
+    ["SUCCESS"] * 92 +
+    ["FAILED"] * 5 +
+    ["PENDING"] * 2 +
+    ["REVERSED"] * 1
 )
 
 fail_reasons = [
