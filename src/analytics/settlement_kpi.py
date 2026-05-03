@@ -10,10 +10,11 @@ from src.utils.logging_config import logger
 def run_settlement_kpis(settlement_df):
     logger.info("=============== KPI 1 : Total Settled Amount By Month ===============")
 
-    settlement_df.groupBy(date_format("settlement_date", "yyyy-MM").alias("month")) \
-        .agg(round(sum(col("net_amount")).alias("total_settled_amount"),2)) \
-        .orderBy("month") \
-        .show()
+    settlement_df.groupBy(
+        date_format("settlement_date", "yyyy-MM").alias("month")
+    ).agg(
+        round(sum(col("net_amount")), 2).alias("total_settled_amount")
+    ).orderBy("month").show()
 
 
     logger.info("=============== KPI 2 : Pending Settlement % ===============")
