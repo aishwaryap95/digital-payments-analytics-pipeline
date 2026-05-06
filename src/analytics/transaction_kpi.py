@@ -20,10 +20,10 @@ def run_transaction_kpis(df):
 
     logger.info("=============== KPI 2 : Success Rate ===============")
 
-    df.agg((sum(
+    df.agg(round((sum(
         when(col("transaction_status") == "SUCCESS", 1)
         .otherwise(0)
-    ) * 100.0 / count("*")).alias("success_rate")) \
+    ) * 100.0 / count("*")),2).alias("success_rate")) \
         .show()
 
 
